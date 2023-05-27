@@ -1,12 +1,9 @@
-
 #ifndef SERVEUR_H
 #define SERVEUR_H
-
 
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
-
 
 class Serveur : public QObject
 {
@@ -18,6 +15,7 @@ signals:
 
 private:
     QTcpServer* mServeur;
+    QList<QTcpSocket*> mClients;
 
 private slots:
     void clientIsConnected();
