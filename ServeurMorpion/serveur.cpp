@@ -1,6 +1,7 @@
 #include "serveur.h"
 #include <QList>
 #include <QDebug>
+#include <QDataStream>
 
 Serveur::Serveur(QObject *parent)
     : QObject{parent}
@@ -30,6 +31,21 @@ void Serveur::clientIsConnected()
     qDebug() << "quelqu'un se connecte depuis" << sock->peerAddress().toString();
 }
 
+void Serveur::updateGameState() {
+
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);  // set the same version on the client side
+
+    // Serialize the gameGrid and currentPlayer into the message
+    out << gameGrid << currentPlayer;
+
+    // Send the message to all clients
+    for (QTcpSocket* client : qAsConst(mClients)) {
+        client->write(block);
+    }
+}
+
 void Serveur::dataComing()
 {
     // Récupération du socket qui a envoyé les données
@@ -44,5 +60,8 @@ void Serveur::dataComing()
         for (QTcpSocket* client : qAsConst(mClients)) {
             client->write(b);
         }
+        updateGameState();
     }
 }
+
+

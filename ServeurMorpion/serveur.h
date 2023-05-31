@@ -16,10 +16,13 @@ signals:
 private:
     QTcpServer* mServeur;
     QList<QTcpSocket*> mClients;
+    QChar currentPlayer; // Pour declarer 'X' et 'O'
+    QVector<QVector<QChar>> gameGrid;
 
 private slots:
     void clientIsConnected();
     void dataComing();
+    void updateGameState();
 
 };
 
