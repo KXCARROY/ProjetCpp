@@ -10,6 +10,10 @@ Serveur::Serveur(QObject *parent)
 
     connect(mServeur,SIGNAL(newConnection()), this,SLOT(clientIsConnected()));
     mServeur->listen(QHostAddress::Any,8080);
+
+    // Initialisation de l'état du jeu
+    gameGrid = QVector<QVector<QChar>>(6, QVector<QChar>(7, ' '));  // grille 6x7 remplie de cases vides
+    currentPlayer = 'X';  // le joueur X commence
 }
 
 void Serveur::clientIsConnected()
