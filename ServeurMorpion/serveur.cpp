@@ -59,13 +59,28 @@ void Serveur::dataComing()
     QTcpSocket* sock = qobject_cast<QTcpSocket*>(sender());
     if (sock)  // Si le cast a réussi
     {
-        QByteArray b = sock->readAll();  // Lecture de toutes les données reçues
+        QByteArray data = sock->readAll();  // Lecture de toutes les données reçues
+        QDataStream in(&data, QIODevice::ReadOnly);
+        in.setVersion(QDataStream::Qt_5_15);
+
+        // Désérialisation de l'action envoyée par le client
+        QString action;
+        int row;
+        int column;
+        in >> action >> row >> column;
+
+        // Mise à jour de l'état du jeu en fonction de l'action
+        if (action == "place" && gameGrid[row][column] == ' ') {
+            gameGrid[row][column] = currentPlayer;
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';  // changement de joueur
+        }
+
         // Affichage des données reçues
-        qDebug() << "recu de :"<< sock->peerAddress().toString() << b;
+        qDebug() << "recu de :"<< sock->peerAddress().toString() << data;
 
         // Echo du message à tous les clients connectés
         for (QTcpSocket* client : qAsConst(mClients)) {
-            client->write(b);
+            client->write(data);
         }
         updateGameState();
     }
