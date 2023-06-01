@@ -24,6 +24,14 @@ public:
 
 private:
     Ui::Morpion *ui;
+    QTcpSocket socket;
+    QVector<QVector<QPushButton*>> buttons;
+
+private slots :
+    void readyRead();
+    void onButtonClicked(int row, int column);
+
+
 };
 
 #endif // MORPION_H
