@@ -51,3 +51,22 @@ void Morpion::onButtonClicked(int index) {
 
     socket.write(block);  // Envoi du message au serveur
 }
+
+// Slot appelé lorsque des données sont prêtes à être lues sur le socket
+void Morpion::readyRead() {
+    QByteArray data = socket.readAll();  // Lecture de toutes les données disponibles
+    QDataStream in(data);
+    in.setVersion(QDataStream::Qt_5_15);
+
+    QVector<QVector<QChar>> gameGrid;
+    // Désérialisation de gameGrid à partir des données reçues du serveur
+    in >> gameGrid;
+
+    // Mise à jour de la grille de jeu
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 7; ++j) {
+            // Mise à jour du texte du bouton correspondant avec l'état de la case
+            buttons[i][j]->setText(QString(gameGrid[i][j]));
+        }
+    }
+}
