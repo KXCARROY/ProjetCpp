@@ -12,7 +12,7 @@ Serveur::Serveur(QObject *parent)
     mServeur->listen(QHostAddress::Any,8080);
 
     // Initialisation de l'état du jeu
-    gameGrid = QVector<QVector<QChar>>(6, QVector<QChar>(7, ' '));  // grille 6x7 remplie de cases vides
+    gameGrid = QVector<QVector<QChar>>(7, QVector<QChar>(6, ' '));  // grille 7*6 remplie de cases vides
     currentPlayer = 'X';  // le joueur X commence
 }
 
@@ -33,6 +33,9 @@ void Serveur::clientIsConnected()
 
     // Affichage de l'adresse du client qui se connecte
     qDebug() << "quelqu'un se connecte depuis" << sock->peerAddress().toString();
+
+    // Envoi de l'état initial du jeu au nouveau client
+    updateGameState();
 }
 
 void Serveur::updateGameState() {
