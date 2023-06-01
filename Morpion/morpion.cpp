@@ -32,5 +32,22 @@ Morpion::Morpion(QWidget *parent) : QWidget(parent), ui(new Ui::Morpion)
 
 
 Morpion::~Morpion(){
+    delete ui;  // Destruction de l'interface utilisateur
+}
 
+
+// Slot appelé lorsqu'un bouton est cliqué
+void Morpion::onButtonClicked(int index) {
+    int row = index / 7;
+    int column = index % 7;
+
+    // Envoi d'une action au serveur
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+
+    // Sérialisation de l'action dans le message
+    out << "place" << row << column;
+
+    socket.write(block);  // Envoi du message au serveur
 }

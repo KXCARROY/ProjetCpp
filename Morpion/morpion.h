@@ -29,7 +29,7 @@ private:
 
 private slots :
     void readyRead();
-    void onButtonClicked(int row, int column);
+    void onButtonClicked(int index);
 
 
 };
