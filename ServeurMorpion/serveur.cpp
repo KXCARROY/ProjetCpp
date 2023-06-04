@@ -19,9 +19,11 @@ Serveur::Serveur(QObject *parent)
         qDebug() << "Serveur démarré sur le port 9999";
     }
 
-    // Initialisation de l'état du jeu
-    gameGrid = QVector<QVector<QChar>>(6, QVector<QChar>(7, ' '));  // grille 7*6 remplie de cases vides
-    currentPlayer = 'X';  // le joueur X commence
+//    // Initialisation de l'état du jeu
+    gameGrid = QVector<QVector<QChar>>(6, QVector<QChar>(7, ' '));
+
+//    // grille 7*6 remplie de cases vides
+   currentPlayer = 'X';  // le joueur X commence
 }
 
 void Serveur::clientIsConnected()

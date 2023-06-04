@@ -72,9 +72,10 @@ public:
         Morpion->resize(800, 600);
         gridLayoutWidget = new QWidget(Morpion);
         gridLayoutWidget->setObjectName(QString::fromUtf8("gridLayoutWidget"));
-        gridLayoutWidget->setGeometry(QRect(10, 40, 625, 531));
+        gridLayoutWidget->setGeometry(QRect(0, 0, 801, 601));
         gridLayout = new QGridLayout(gridLayoutWidget);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
+        gridLayout->setSizeConstraint(QLayout::SetMaximumSize);
         gridLayout->setContentsMargins(0, 0, 0, 0);
         button20 = new QPushButton(gridLayoutWidget);
         button20->setObjectName(QString::fromUtf8("button20"));
@@ -221,11 +222,8 @@ public:
 
         button00 = new QPushButton(gridLayoutWidget);
         button00->setObjectName(QString::fromUtf8("button00"));
-        QSizePolicy sizePolicy1(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-        sizePolicy1.setHorizontalStretch(0);
-        sizePolicy1.setVerticalStretch(0);
-        sizePolicy1.setHeightForWidth(button00->sizePolicy().hasHeightForWidth());
-        button00->setSizePolicy(sizePolicy1);
+        sizePolicy.setHeightForWidth(button00->sizePolicy().hasHeightForWidth());
+        button00->setSizePolicy(sizePolicy);
 
         gridLayout->addWidget(button00, 0, 0, 1, 1);
 
