@@ -356,7 +356,9 @@ debug/serveur.o: ../ServeurMorpion/serveur.cpp ../ServeurMorpion/serveur.h \
 		C:/Qt/5.15.2/mingw81_64/include/QtNetwork/QTcpSocket \
 		C:/Qt/5.15.2/mingw81_64/include/QtNetwork/qtcpsocket.h \
 		C:/Qt/5.15.2/mingw81_64/include/QtCore/QList \
-		C:/Qt/5.15.2/mingw81_64/include/QtCore/QDebug
+		C:/Qt/5.15.2/mingw81_64/include/QtCore/QDebug \
+		C:/Qt/5.15.2/mingw81_64/include/QtCore/QDataStream \
+		C:/Qt/5.15.2/mingw81_64/include/QtCore/qdatastream.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\serveur.o ..\ServeurMorpion\serveur.cpp
 
 debug/moc_serveur.o: debug/moc_serveur.cpp 

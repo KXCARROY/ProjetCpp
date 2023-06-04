@@ -1,4 +1,3 @@
-
 #include "morpion.h"
 
 #include <QApplication>

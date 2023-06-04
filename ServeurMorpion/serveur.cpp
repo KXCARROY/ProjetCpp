@@ -9,7 +9,15 @@ Serveur::Serveur(QObject *parent)
     mServeur = new QTcpServer(this);
 
     connect(mServeur,SIGNAL(newConnection()), this,SLOT(clientIsConnected()));
-    mServeur->listen(QHostAddress::Any,9999);
+
+
+    // Vérification de la mise en place du serveur
+    if (!mServeur->listen(QHostAddress::Any,9999)) {
+        qDebug() << "Serveur n'a pas pu démarrer!";
+            qDebug() << "Erreur: " << mServeur->errorString();
+    } else {
+        qDebug() << "Serveur démarré sur le port 9999";
+    }
 
     // Initialisation de l'état du jeu
     gameGrid = QVector<QVector<QChar>>(6, QVector<QChar>(7, ' '));  // grille 7*6 remplie de cases vides
@@ -20,6 +28,12 @@ void Serveur::clientIsConnected()
 {
     // Récupération du socket de la connexion entrante
     QTcpSocket* sock = mServeur->nextPendingConnection();
+
+    // Vérification du socket
+    if (!sock) {
+        qDebug() << "Erreur lors de la récupération du socket de la connexion entrante";
+        return;
+    }
 
     mClients.append(sock);  // Ajout du socket à la liste des clients connectés
 
@@ -63,6 +77,12 @@ void Serveur::dataComing()
         QDataStream in(&data, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_15);
 
+        // Vérification de la quantité de données
+        if (in.atEnd()) {
+            qDebug() << "Erreur : données insuffisantes pour la désérialisation";
+            return;
+        }
+
         // Désérialisation de l'action envoyée par le client
         QString action;
         int row;
@@ -83,7 +103,9 @@ void Serveur::dataComing()
             client->write(data);
         }
         updateGameState();
+
+
+    }else {
+        qDebug() << "Erreur : le cast du socket a échoué";
     }
 }
-
-

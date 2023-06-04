@@ -486,7 +486,10 @@ release/morpion.o: ../Morpion/morpion.cpp ../Morpion/morpion.h \
 		C:/Qt/5.15.2/mingw81_64/include/QtWidgets/qpushbutton.h \
 		C:/Qt/5.15.2/mingw81_64/include/QtWidgets/qabstractbutton.h \
 		C:/Qt/5.15.2/mingw81_64/include/QtGui/qicon.h \
-		C:/Qt/5.15.2/mingw81_64/include/QtCore/QDataStream
+		ui_morpion.h \
+		C:/Qt/5.15.2/mingw81_64/include/QtCore/QDataStream \
+		C:/Qt/5.15.2/mingw81_64/include/QtCore/QSignalMapper \
+		C:/Qt/5.15.2/mingw81_64/include/QtCore/qsignalmapper.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\morpion.o ..\Morpion\morpion.cpp
 
 release/moc_morpion.o: release/moc_morpion.cpp 

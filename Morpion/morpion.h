@@ -1,4 +1,3 @@
-
 #ifndef MORPION_H
 #define MORPION_H
 
@@ -30,6 +29,7 @@ private:
 private slots :
     void readyRead();
     void onButtonClicked(int index);
+    void onConnected();
 
 
 };

@@ -8,11 +8,18 @@ Morpion::Morpion(QWidget *parent) : QWidget(parent), ui(new Ui::Morpion)
 {
     ui->setupUi(this);
 
+    // Connexion du signal connected de ma socket au slot onConnected de Morpion
+    connect(&socket, &QTcpSocket::connected, this, &Morpion::onConnected);
     // Connexion du signal readyRead de ma socket au slot readyRead de Morpion
     connect(&socket, &QTcpSocket::readyRead, this, &Morpion::readyRead);
-    socket.connectToHost("localhost", 9999);  // Connexion au serveur
+    socket.connectToHost("localhost", 8080);  // Connexion au serveur
 
-    qDebug() << "Le client est connecté au serveur";
+    // Vérification de la connexion au serveur
+    if (socket.state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "Erreur de connexion au serveur";
+    } else {
+        qDebug() << "Le client est connecté au serveur";
+    }
 
     //Initialilisation des boutons et connexion à la méthode onButtonClicked
     button = QVector<QVector<QPushButton*>>(6,QVector<QPushButton*>(7));
@@ -64,14 +71,24 @@ Morpion::Morpion(QWidget *parent) : QWidget(parent), ui(new Ui::Morpion)
 
 
     // Connexion des boutons au mapper
-    for (int i = 1; i < 6; ++i) {
-        for (int j = 1; j < 7; ++j) {
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 7; ++j) {
+
+            connect(button[0][0], &QPushButton::clicked, []() {
+                qDebug() << "Button 0,0 clicked";
+            });
 
             // Connexion du signal clicked du bouton au slot map du mapper
             connect(button[i][j], SIGNAL(clicked()), mapper, SLOT(map()));
 
             // Association du bouton avec un index dans le mapper et convertir des coordonnées bidimensionnelles en index unidimensionnel
             mapper->setMapping(button[i][j], i * 7 + j);
+
+            // Vérification de ma socket avant d'envoyer des données
+            if (socket.state() != QAbstractSocket::ConnectedState) {
+                qDebug() << "Erreur : le socket n'est pas connecté avant d'envoyer des données";
+                return;
+            }
         }
     }
     // Connexion du signal du mapper au slot onButtonClicked
@@ -88,6 +105,18 @@ Morpion::~Morpion(){
 void Morpion::onButtonClicked(int index) {
     int row = index / 7;
     int column = index % 7;
+
+    // Vérification des limites
+    if (row < 0 || row >= 6 || column < 0 || column >= 7) {
+        qDebug() << "L'index est hors limite";
+        return;
+    }
+
+    // Vérification si la case est vide
+    if (button[row][column]->text() != ' ') {
+        qDebug() << "La case est déjà occupée";
+        return;
+    }
 
     // Envoi d'une action au serveur
     QByteArray block;
@@ -107,14 +136,24 @@ void Morpion::readyRead() {
     in.setVersion(QDataStream::Qt_5_15);
 
     QVector<QVector<QChar>> gameGrid;
+
+
+    QChar currentPlayer;
     // Désérialisation de gameGrid à partir des données reçues du serveur
-    in >> gameGrid;
+    in >> gameGrid >> currentPlayer;;
 
     // Mise à jour de la grille de jeu
-    for (int i = 1; i < 6; ++i) {
-        for (int j = 1; j < 7; ++j) {
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 7; ++j) {
             // Mise à jour du texte du bouton correspondant avec l'état de la case
-            button[i][j]->setText(QString(gameGrid[i][j]));
+            if (gameGrid[i][j] != ' ') {
+                button[i][j]->setText(QString(gameGrid[i][j]));
+                button[i][j]->setEnabled(false);
+            }
         }
     }
+}
+
+void Morpion::onConnected() {
+    qDebug() << "Le client est connecté au serveur";
 }
