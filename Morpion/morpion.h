@@ -25,7 +25,7 @@ public:
 private:
     Ui::Morpion *ui;
     QTcpSocket socket;
-    QVector<QVector<QPushButton*>> buttons;
+    QVector<QVector<QPushButton*>> button;
 
 private slots :
     void readyRead();
