@@ -73,24 +73,24 @@ Morpion::Morpion(QWidget *parent) : QWidget(parent), ui(new Ui::Morpion)
     // Connexion des boutons au mapper
     for (int i = 0; i < 6; ++i) {
         for (int j = 0; j < 7; ++j) {
-
             // Connexion du signal clicked du bouton au slot map du mapper
             connect(button[i][j], SIGNAL(clicked()), mapper, SLOT(map()));
 
             // Association du bouton avec un index dans le mapper et convertir des coordonnées bidimensionnelles en index unidimensionnel
             mapper->setMapping(button[i][j], i * 7 + j);
 
-            // Vérification de ma socket avant d'envoyer des données
-            if (socket.state() != QAbstractSocket::ConnectedState) {
-                qDebug() << "Erreur : le socket n'est pas connecté avant d'envoyer des données";
-                return;
-            }
+            qDebug() << "Bouton [" << i << "][" << j << "] connecté.";  // Ajoutez cette ligne
         }
     }
 
     // Connexion du signal du mapper au slot onButtonClicked
     connect(mapper, SIGNAL(mapped(int)), this, SLOT(onButtonClicked(int)));
+
 }
+
+
+
+
 
 
 Morpion::~Morpion(){
@@ -99,11 +99,20 @@ Morpion::~Morpion(){
 
 void Morpion::onConnected() {
     qDebug() << "Le client est connecté au serveur";
+
+        // Vérification de ma socket avant d'envoyer des données
+        if (socket.state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "Erreur : le socket n'est pas connecté avant d'envoyer des données";
+        return;
+    }
 }
 
 
 // Slot appelé lorsqu'un bouton est cliqué
 void Morpion::onButtonClicked(int index) {
+    qDebug() << "Button clicked, index: " << index;
+
+
     int row = index / 7;
     int column = index % 7;
 
@@ -119,6 +128,18 @@ void Morpion::onButtonClicked(int index) {
         return;
     }
 
+    // Envoi d'une action au serveur
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+
+
+    // Sérialisation de l'action dans le message
+    out << "place" << row << column;
+
+    qDebug() << "Sending action to server: place" << row << column;
+
+    socket.write(block);  // Envoi du message au serveur
 
     // Changement du texte du bouton selon le joueur qui a cliqué
     button[row][column]->setText(currentPlayer);
@@ -128,15 +149,6 @@ void Morpion::onButtonClicked(int index) {
 
     button[row][column]->setText(QString(currentPlayer));
 
-    // Envoi d'une action au serveur
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-
-    // Sérialisation de l'action dans le message
-    out << "place" << row << column;
-
-    socket.write(block);  // Envoi du message au serveur
 }
 
 // Slot appelé lorsque des données sont prêtes à être lues sur le socket
@@ -173,6 +185,8 @@ void Morpion::readyRead() {
             }
         }
     }
+    currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
 }
 
 
