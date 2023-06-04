@@ -77,9 +77,7 @@ void Morpion::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, voi
         auto *_t = static_cast<Morpion *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->readyRead(); break;
         case 1: _t->onButtonClicked((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 2: _t->onConnected(); break;
         default: ;
         }
     }
