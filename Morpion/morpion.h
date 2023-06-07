@@ -26,11 +26,17 @@ private:
     QTcpSocket socket;
     QVector<QVector<QPushButton*>> button;
     QChar currentPlayer;
+    bool checkWin(QChar player);
+
+
 
 private slots :
     void readyRead();
     void onButtonClicked(int index);
     void onConnected();
+    void updateUI(const QVector<QVector<QChar>>& gameGrid, QChar newCurrentPlayer);
+signals:
+    void gameStateUpdated(const QVector<QVector<QChar>>& gameGrid, QChar currentPlayer);
 
 
 };

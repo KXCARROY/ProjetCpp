@@ -8,22 +8,23 @@
 class Serveur : public QObject
 {
     Q_OBJECT
+
 public:
     explicit Serveur(QObject *parent = nullptr);
-
-signals:
-
-private:
-    QTcpServer* mServeur;
-    QList<QTcpSocket*> mClients;
-    QChar currentPlayer; // Pour declarer 'X' et 'O'
-    QVector<QVector<QChar>> gameGrid;
+    ~Serveur();
 
 private slots:
     void clientIsConnected();
     void dataComing();
-    void updateGameState();
 
+private:
+    QTcpServer* mServeur;
+    QList<QTcpSocket*> mClients;
+    QTcpSocket* currentClient = nullptr;
+    QVector<QVector<QChar>> gameGrid;
+    QChar currentPlayer = 'X';
+
+    void updateGameState();
 };
 
 #endif // SERVEUR_H

@@ -88,30 +88,16 @@ Morpion::Morpion(QWidget *parent) : QWidget(parent), ui(new Ui::Morpion)
 
 }
 
-
-
-
-
+void Morpion::onConnected() {
+    qDebug() << "Le client est connecté au serveur";
+}
 
 Morpion::~Morpion(){
     delete ui;  // Destruction de l'interface utilisateur
 }
 
-void Morpion::onConnected() {
-    qDebug() << "Le client est connecté au serveur";
-
-        // Vérification de ma socket avant d'envoyer des données
-        if (socket.state() != QAbstractSocket::ConnectedState) {
-        qDebug() << "Erreur : le socket n'est pas connecté avant d'envoyer des données";
-        return;
-    }
-}
-
-
-// Slot appelé lorsqu'un bouton est cliqué
 void Morpion::onButtonClicked(int index) {
     qDebug() << "Button clicked, index: " << index;
-
 
     int row = index / 7;
     int column = index % 7;
@@ -133,7 +119,6 @@ void Morpion::onButtonClicked(int index) {
     QDataStream out(&block, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_15);
 
-
     // Sérialisation de l'action dans le message
     out << "place" << row << column;
 
@@ -142,17 +127,37 @@ void Morpion::onButtonClicked(int index) {
     socket.write(block);  // Envoi du message au serveur
 
     // Changement du texte du bouton selon le joueur qui a cliqué
-    button[row][column]->setText(currentPlayer);
+    button[row][column]->setText(QString(currentPlayer));
+
+    // Vérifier si le joueur a gagné
+    if (checkWin(currentPlayer)) {
+        qDebug() << "Le joueur" << currentPlayer << "a gagné !";
+        // Vous pouvez ajouter ici du code pour gérer la fin du jeu
+    }
 
     // Modification du joueur pour le prochain tour
     currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-
-    button[row][column]->setText(QString(currentPlayer));
-
 }
 
-// Slot appelé lorsque des données sont prêtes à être lues sur le socket
+void Morpion::updateUI(const QVector<QVector<QChar>>& gameGrid, QChar newCurrentPlayer) {
+    // Mise à jour de la grille de jeu
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 7; ++j) {
+            // Mise à jour du texte du bouton correspondant avec l'état de la case
+            if (gameGrid[i][j] != ' ') {
+                button[i][j]->setText(QString(gameGrid[i][j]));
+                button[i][j]->setEnabled(false);
+            }
+        }
+    }
+
+    currentPlayer = newCurrentPlayer;
+    qDebug() << "Le joueur actuel est :" << QString(currentPlayer);
+}
+
 void Morpion::readyRead() {
+    qDebug() << "Reçu une mise à jour du serveur";
+
     QByteArray data = socket.readAll();  // Lecture de toutes les données disponibles
 
     QDataStream in(&data, QIODevice::ReadOnly);
@@ -165,30 +170,50 @@ void Morpion::readyRead() {
     }
 
     QVector<QVector<QChar>> gameGrid;
-    QChar currentPlayer;
+    QChar newCurrentPlayer;
 
     // Tentez de désérialiser les données
     try {
-        in >> gameGrid >> currentPlayer;
+        in >> gameGrid >> newCurrentPlayer;
     } catch (...) {
         qDebug() << "Erreur lors de la désérialisation des données";
         return;
     }
 
-    // Mise à jour de la grille de jeu
-    for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < 7; ++j) {
-            // Mise à jour du texte du bouton correspondant avec l'état de la case
-            if (gameGrid[i][j] != ' ') {
-                button[i][j]->setText(QString(gameGrid[i][j]));
-                button[i][j]->setEnabled(false);
-            }
-        }
-    }
-    currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-
+    updateUI(gameGrid, newCurrentPlayer);
 }
 
+bool Morpion::checkWin(QChar player) {
+    // Check lignes
+    for (int i = 0; i < 6; ++i) {
+        if (button[i][0]->text() == player &&
+            button[i][1]->text() == player &&
+            button[i][2]->text() == player)
+            return true;
+    }
+
+    // Check colonnes
+    for (int i = 0; i < 7; ++i) {
+        if (button[0][i]->text() == player &&
+            button[1][i]->text() == player &&
+            button[2][i]->text() == player)
+            return true;
+    }
+
+    // Check diago
+    for (int i = 0; i < 4; ++i) {
+        if (button[i][i]->text() == player &&
+            button[i+1][i+1]->text() == player &&
+            button[i+2][i+2]->text() == player)
+            return true;
+        if (button[5-i][i]->text() == player &&
+            button[5-i-1][i+1]->text() == player &&
+            button[5-i-2][i+2]->text() == player)
+            return true;
+    }
+
+    return false;
+}
 
 
 

@@ -10,7 +10,6 @@ Serveur::Serveur(QObject *parent)
 
     connect(mServeur,SIGNAL(newConnection()), this,SLOT(clientIsConnected()));
 
-
     // Vérification de la mise en place du serveur
     if (!mServeur->listen(QHostAddress::Any,9999)) {
         qDebug() << "Serveur n'a pas pu démarrer!";
@@ -19,95 +18,97 @@ Serveur::Serveur(QObject *parent)
         qDebug() << "Serveur démarré sur le port 9999";
     }
 
-//    // Initialisation de l'état du jeu
     gameGrid = QVector<QVector<QChar>>(6, QVector<QChar>(7, ' '));
+    currentPlayer = 'X';  // le joueur X commence
+    qDebug() << "Nombre de client connecté: " << mClients.count();
 
-//    // grille 7*6 remplie de cases vides
-   currentPlayer = 'X';  // le joueur X commence
 }
 
 void Serveur::clientIsConnected()
 {
-    // Récupération du socket de la connexion entrante
     QTcpSocket* sock = mServeur->nextPendingConnection();
 
-    // Vérification du socket
     if (!sock) {
         qDebug() << "Erreur lors de la récupération du socket de la connexion entrante";
         return;
     }
 
-    mClients.append(sock);  // Ajout du socket à la liste des clients connectés
+    mClients.append(sock);
 
-    // Connexion du signal disconnected du socket au slot deleteLater
+    if (currentClient == nullptr) {
+        currentClient = sock;
+        qDebug() << "Le premier client à se connecter est :" << sock->peerAddress().toString();
+    } else if (mClients.size() == 2 && mClients[0] == currentClient) {
+        qDebug() << "Le premier client à se connecter est bien le même que mClients[0]";
+    }
+
     connect(sock, SIGNAL(disconnected()),sock,SLOT(deleteLater()));
-
-    // Connexion du signal readyRead du socket au slot dataComing
     connect(sock,SIGNAL(readyRead()),this,SLOT(dataComing()));
 
-    sock->write("Bonjour !");  // Envoi d'un message de bienvenue au client
-
-    // Affichage de l'adresse du client qui se connecte
+    sock->write("Bonjour !");
     qDebug() << "quelqu'un se connecte depuis" << sock->peerAddress().toString();
 
-    // Envoi de l'état initial du jeu au nouveau client
     updateGameState();
 }
 
 void Serveur::updateGameState() {
-
     QByteArray block;
     QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);  // set the same version on the client side
+    out.setVersion(QDataStream::Qt_5_15);
 
-    // Serialize the gameGrid and currentPlayer into the message
     out << gameGrid << currentPlayer;
 
-    // Send the message to all clients
     for (QTcpSocket* client : qAsConst(mClients)) {
         client->write(block);
     }
+    qDebug() << "Mise à jour du jeu envoyée à tous les clients";
 }
+
 
 void Serveur::dataComing()
 {
-    // Récupération du socket qui a envoyé les données
     QTcpSocket* sock = qobject_cast<QTcpSocket*>(sender());
-    if (sock)  // Si le cast a réussi
+    if (sock)
     {
-        QByteArray data = sock->readAll();  // Lecture de toutes les données reçues
+        if (sock != currentClient) {
+            qDebug() << "Ce n'est pas le tour de ce client.";
+            return;
+        }
+
+        QByteArray data = sock->readAll();
         QDataStream in(&data, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_15);
 
-        // Vérification de la quantité de données
         if (in.atEnd()) {
             qDebug() << "Erreur : données insuffisantes pour la désérialisation";
             return;
         }
 
-        // Désérialisation de l'action envoyée par le client
         QString action;
         int row;
         int column;
         in >> action >> row >> column;
 
-        // Mise à jour de l'état du jeu en fonction de l'action
         if (action == "place" && gameGrid[row][column] == ' ') {
             gameGrid[row][column] = currentPlayer;
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';  // changement de joueur
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+            currentClient = (currentClient == mClients[0]) ? mClients[1] : mClients[0];
         }
 
-        // Affichage des données reçues
         qDebug() << "recu de :"<< sock->peerAddress().toString() << data;
 
-        // Echo du message à tous les clients connectés
         for (QTcpSocket* client : qAsConst(mClients)) {
             client->write(data);
         }
         updateGameState();
-
-
-    }else {
+    }
+    else {
         qDebug() << "Erreur : le cast du socket a échoué";
     }
+}
+
+
+
+Serveur::~Serveur() {
+    delete mServeur;
 }
