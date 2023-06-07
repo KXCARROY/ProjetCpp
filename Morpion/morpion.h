@@ -31,6 +31,8 @@ private:
 
 
 private slots :
+    void resetGame();
+
     void readyRead();
     void onButtonClicked(int index);
     void onConnected();

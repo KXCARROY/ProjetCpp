@@ -2,6 +2,7 @@
 #include "ui_morpion.h"
 #include <QDataStream>
 #include <QSignalMapper>
+#include <QMessageBox>
 
 
 Morpion::Morpion(QWidget *parent) : QWidget(parent), ui(new Ui::Morpion)
@@ -128,11 +129,27 @@ void Morpion::onButtonClicked(int index) {
 
     // Changement du texte du bouton selon le joueur qui a cliqué
     button[row][column]->setText(QString(currentPlayer));
+    if (this->checkWin(currentPlayer)) {
+        qDebug() << "Le joueur" << currentPlayer << " gagne!";
+        QMessageBox msgBox;
+        msgBox.setText("Le Joueur " + QString(currentPlayer) + " gagne !");
+        msgBox.setInformativeText("Voulez-vous rejouer ?");
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.button(QMessageBox::Yes)->setText(tr("Oui"));
+        msgBox.button(QMessageBox::No)->setText(tr("Non"));
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        int ret = msgBox.exec();
 
-    // Vérifier si le joueur a gagné
-    if (checkWin(currentPlayer)) {
-        qDebug() << "Le joueur" << currentPlayer << "a gagné !";
-        // Vous pouvez ajouter ici du code pour gérer la fin du jeu
+        switch (ret) {
+        case QMessageBox::Yes:
+            // rejouer la partie
+            this->resetGame();
+            break;
+        case QMessageBox::No:
+            // fermer l'app
+            QApplication::quit();
+            break;
+        }
     }
 
     // Modification du joueur pour le prochain tour
@@ -186,39 +203,60 @@ void Morpion::readyRead() {
 bool Morpion::checkWin(QChar player) {
     // Check lignes
     for (int i = 0; i < 6; ++i) {
-        if (button[i][0]->text() == player &&
-            button[i][1]->text() == player &&
-            button[i][2]->text() == player)
-            return true;
+        for (int j = 0; j < 4; ++j) {
+            if (button[i][j]->text() == player &&
+                button[i][j+1]->text() == player &&
+                button[i][j+2]->text() == player &&
+                button[i][j+3]->text() == player)
+                return true;
+        }
     }
 
     // Check colonnes
     for (int i = 0; i < 7; ++i) {
-        if (button[0][i]->text() == player &&
-            button[1][i]->text() == player &&
-            button[2][i]->text() == player)
-            return true;
+        for (int j = 0; j < 3; ++j) {
+            if (button[j][i]->text() == player &&
+                button[j+1][i]->text() == player &&
+                button[j+2][i]->text() == player &&
+                button[j+3][i]->text() == player)
+                return true;
+        }
     }
 
-    // Check diago
-    for (int i = 0; i < 4; ++i) {
-        if (button[i][i]->text() == player &&
-            button[i+1][i+1]->text() == player &&
-            button[i+2][i+2]->text() == player)
-            return true;
-        if (button[5-i][i]->text() == player &&
-            button[5-i-1][i+1]->text() == player &&
-            button[5-i-2][i+2]->text() == player)
-            return true;
+    // Check diago bas droite
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (button[i][j]->text() == player &&
+                button[i+1][j+1]->text() == player &&
+                button[i+2][j+2]->text() == player &&
+                button[i+3][j+3]->text() == player)
+                return true;
+        }
+    }
+
+    // Check diago haut droite
+    for (int i = 3; i < 6; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (button[i][j]->text() == player &&
+                button[i-1][j+1]->text() == player &&
+                button[i-2][j+2]->text() == player &&
+                button[i-3][j+3]->text() == player)
+                return true;
+        }
     }
 
     return false;
 }
 
-
-
-
-
+void Morpion::resetGame() {
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 7; ++j) {
+            button[i][j]->setText("");
+            button[i][j]->setEnabled(true);
+        }
+    }
+    currentPlayer = 'X';
+}
 
 //Code tiktaktoe local
 
